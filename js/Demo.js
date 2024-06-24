@@ -1,7 +1,8 @@
-import { GPUCurtains } from 'gpu-curtains'
+import { GPUCameraRenderer, GPUCurtains } from 'gpu-curtains'
 import Lenis from 'lenis'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { IntroScene } from './intro-scene/IntroScene'
 
 export class Demo {
   constructor() {
@@ -65,13 +66,26 @@ export class Demo {
   }
 
   createScenes() {
-    // here we'll create each scenes
+    this.createIntroScene()
 
     this.lenis.on('scroll', (e) => {
       this.gpuCurtains.updateScrollValues({ x: 0, y: e.scroll })
 
       this.scenes.forEach((scene) => scene.onScroll(e.velocity, e.lastVelocity))
     })
+  }
+
+  createIntroScene() {
+    const introScene = new IntroScene({
+      renderer: new GPUCameraRenderer({
+        deviceManager: this.deviceManager,
+        label: 'Intro scene renderer',
+        container: '#intro-scene-canvas',
+        pixelRatio: this.pixelRatio,
+      }),
+    })
+
+    this.scenes.push(introScene)
   }
 
   destroyScenes() {
