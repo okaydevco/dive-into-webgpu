@@ -1,6 +1,7 @@
 import { Plane } from 'gpu-curtains'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
+import { planesFs, planesVs } from '../shaders/gallery-planes.wgsl'
 
 export class PlanesScene extends DemoScene {
   constructor({ renderer }) {
@@ -18,7 +19,20 @@ export class PlanesScene extends DemoScene {
 
   setupWebGPU() {
     this.planesElements.forEach((planeEl, index) => {
-      const plane = new Plane(this.renderer, planeEl)
+      const plane = new Plane(this.renderer, planeEl, {
+        label: `Plane ${index}`,
+        shaders: {
+          vertex: {
+            code: planesVs,
+          },
+          fragment: {
+            code: planesFs,
+          },
+        },
+        texturesOptions: {
+          generateMips: true,
+        },
+      })
 
       this.planes.push(plane)
     })
