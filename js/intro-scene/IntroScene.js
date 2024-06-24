@@ -61,15 +61,32 @@ export class IntroScene extends DemoScene {
       const mesh = new Mesh(this.renderer, {
         label: `Cube ${i}`,
         geometry: boxGeometry,
+        frustumCulling: false,
       })
+
       // set a random initial rotation
       mesh.rotation.set(Math.random(), Math.random(), Math.random())
 
-      // set a random initial position
-      // remember 80 is our camera position along the Z axis
-      mesh.position.x = Math.random() * 80 - 40
-      mesh.position.y = Math.random() * 80 - 40
-      mesh.position.z = (Math.random() - 0.5) * 80
+      // a random depth position based on the camera position along Z axis
+      const zPosition = (Math.random() - 0.5) * this.renderer.camera.position.z
+
+      const setMeshPosition = (zPosition) => {
+        // get the visible width and height in world unit at given depth
+        const visibleSize = this.renderer.camera.getVisibleSizeAtDepth(zPosition)
+
+        mesh.position.set(
+          visibleSize.width * (Math.random() * 0.5) * Math.sign(Math.random() - 0.5),
+          visibleSize.height * (Math.random() * 0.5) * Math.sign(Math.random() - 0.5),
+          zPosition
+        )
+      }
+
+      // updates the position right away AND after resize!
+      setMeshPosition(zPosition)
+
+      mesh.onAfterResize(() => {
+        setMeshPosition(zPosition)
+      })
 
       this.meshes.push(mesh)
     }
