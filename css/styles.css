@@ -1,0 +1,228 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300&display=swap');
+
+@font-face {
+  font-family: 'Excon-Bold';
+  src: url('/assets/fonts/Excon-Bold.woff2') format('woff2'), url('/assets/fonts/Excon-Bold.woff') format('woff'),
+    url('/assets/fonts/Excon-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-display: swap;
+  font-style: normal;
+}
+
+@media screen {
+  :root {
+    --font-size: clamp(14px, max(1.75vw, 1.75vh), 22px);
+    --display-font: 'Excon-Bold', sans-serif;
+    --text-font: 'Montserrat', sans-serif;
+    --basic-spacing: 2rem;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  html {
+    font-size: var(--font-size);
+    line-height: 1.4;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--text-font);
+  }
+
+  .container {
+    padding: var(--basic-spacing);
+  }
+
+  .centered-text-content {
+    max-width: 40rem;
+    margin: 0 auto;
+  }
+
+  .tiny {
+    font-size: 0.66em;
+  }
+
+  .small {
+    font-size: 0.825em;
+  }
+
+  .gsap-auto-alpha {
+    visibility: hidden;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--display-font);
+    line-height: 1.1;
+  }
+
+  h1 {
+    font-size: 4rem;
+  }
+
+  h2 {
+    font-size: 2.5rem;
+  }
+
+  button {
+    cursor: pointer;
+    font: inherit;
+    background: transparent;
+    color: inherit;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  canvas {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* NO WEBGPU DISCLAIMER */
+
+  #no-webgpu-disclaimer {
+    position: fixed;
+    right: calc(var(--basic-spacing) * 0.5);
+    bottom: calc(var(--basic-spacing) * 0.5);
+    padding: calc(var(--basic-spacing) * 0.5);
+    color: #ffffff;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid #ffffff;
+    border-radius: calc(var(--basic-spacing) * 0.25);
+    z-index: 1;
+    max-width: 25em;
+  }
+
+  /* GSAP */
+
+  .gsap-auto-alpha {
+    visibility: hidden;
+  }
+
+  /* LENIS */
+
+  html.lenis,
+  html.lenis body {
+    height: auto;
+  }
+
+  .lenis.lenis-smooth {
+    scroll-behavior: auto !important;
+  }
+
+  .lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  .lenis.lenis-stopped {
+    overflow: hidden;
+  }
+
+  .lenis.lenis-smooth iframe {
+    pointer-events: none;
+  }
+
+  /* INTRO SCENE */
+
+  #intro-scene {
+    position: relative;
+    height: 100svh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #191919;
+    color: #ffffff;
+  }
+
+  .no-webgpu #intro-scene:after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: url('/assets/fallbacks/intro-scene-bg.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .no-webgpu #intro-scene.is-visible:after {
+    opacity: 1;
+    transition: opacity 1s 0.5s;
+  }
+
+  #intro-scene-canvas {
+    position: absolute;
+    inset: 0;
+  }
+
+  #intro-scene-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
+
+  #intro-scene-content h1 {
+    margin: 0;
+  }
+
+  #intro-scene-content h1 span {
+    display: block;
+  }
+
+  #intro-scene-content h2 {
+    margin: 0 0 1rem 0;
+  }
+
+  #intro-scene p {
+    margin: var(--basic-spacing) auto;
+    text-shadow: #111111 0 0 0.75rem, #000000 0 0 0.15rem;
+  }
+
+  #intro-scene p button {
+    background: #111111;
+    border: 1px solid white;
+    padding: 0.5em 1em;
+    border-radius: 2.4em;
+    text-transform: uppercase;
+    transition: background 0.35s, color 0.35s;
+  }
+
+  #intro-scene p button:hover {
+    color: #111111;
+    background: white;
+  }
+}
+
+@media screen and (max-width: 1024px) {
+  .tiny {
+    font-size: 0.75em;
+  }
+
+  .small {
+    font-size: 0.9em;
+  }
+}
+
+@media screen and (max-width: 720px) {
+  :root {
+    --basic-spacing: 1.5rem;
+  }
+
+  .tiny {
+    font-size: 0.9em;
+  }
+
+  .small {
+    font-size: 1em;
+  }
+}
