@@ -2,6 +2,7 @@ import { BoxGeometry, Mesh, SphereGeometry, Vec3 } from 'gpu-curtains'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
 import { gsap } from 'gsap'
+import { introMeshFs, introMeshVs } from '../shaders/intro-meshes.wgsl'
 
 export class IntroScene extends DemoScene {
   constructor({ renderer, nbMeshes = 500 }) {
@@ -96,6 +97,14 @@ export class IntroScene extends DemoScene {
       const mesh = new Mesh(this.renderer, {
         label: `Cube ${i}`,
         geometry: Math.random() > 0.33 ? boxGeometry : sphereGeometry,
+        shaders: {
+          vertex: {
+            code: introMeshVs,
+          },
+          fragment: {
+            code: introMeshFs,
+          },
+        },
         uniforms: {
           ambientLight: {
             visibility: ['fragment'],
