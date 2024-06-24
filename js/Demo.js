@@ -1,4 +1,4 @@
-import { GPUCameraRenderer, GPUCurtains, GPUCurtainsRenderer } from 'gpu-curtains'
+import { GPUCurtains } from 'gpu-curtains'
 import Lenis from 'lenis'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
