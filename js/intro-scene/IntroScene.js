@@ -1,4 +1,4 @@
-import { BoxGeometry, Mesh, SphereGeometry, Vec3 } from 'gpu-curtains'
+import { BoxGeometry, Mesh, SphereGeometry, Vec2, Vec3 } from 'gpu-curtains'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
 import { gsap } from 'gsap'
@@ -18,7 +18,10 @@ export class IntroScene extends DemoScene {
     this.renderer.camera.position.z = 80
 
     // feel free to tweak the light position and see how it goes
-    this.lightPosition = new Vec3(50, 20, 100)
+    // this.lightPosition = new Vec3(50, 20, 100)
+
+    this.lightPosition = this.renderer.camera.position.clone().multiplyScalar(2)
+    this.currentLightPosition = this.lightPosition.clone()
 
     this.meshes = []
 
@@ -31,6 +34,17 @@ export class IntroScene extends DemoScene {
 
   destroyWebGPU() {
     this.meshes.forEach((mesh) => mesh.remove())
+  }
+
+  addEvents() {
+    this._onPointerMoveHandler = this.onPointerMove.bind(this)
+    window.addEventListener('mousemove', this._onPointerMoveHandler)
+    window.addEventListener('touchmove', this._onPointerMoveHandler)
+  }
+
+  removeEvents() {
+    window.removeEventListener('mousemove', this._onPointerMoveHandler)
+    window.removeEventListener('touchmove', this._onPointerMoveHandler)
   }
 
   addScrollTrigger() {
@@ -216,8 +230,25 @@ export class IntroScene extends DemoScene {
     }
   }
 
+  onPointerMove(e) {
+    const { clientX, clientY } = e.targetTouches && e.targetTouches.length ? e.targetTouches[0] : e
+    const { width, height } = this.renderer.boundingRect
+    const worldPosition = this.renderer.camera.getVisibleSizeAtDepth(this.currentLightPosition.z)
+
+    const normalizedScreenCords = new Vec2((clientX - width * 0.5) / width, (clientY - height * 0.5) / height)
+
+    this.currentLightPosition.set(
+      normalizedScreenCords.x * worldPosition.width * 0.5,
+      normalizedScreenCords.y * worldPosition.height * -0.5,
+      this.currentLightPosition.z
+    )
+  }
+
   onRender() {
     if (!this.shouldRender) return
+
+    // lerp light position for a more pleasant result
+    this.lightPosition.lerp(this.currentLightPosition, 0.05)
 
     this.meshes.forEach((mesh) => {
       mesh.userData.currentPosition
