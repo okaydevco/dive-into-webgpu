@@ -1,4 +1,4 @@
-import { BoxGeometry, Mesh, Vec3 } from 'gpu-curtains'
+import { BoxGeometry, Mesh, SphereGeometry, Vec3 } from 'gpu-curtains'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
 import { gsap } from 'gsap'
@@ -15,6 +15,9 @@ export class IntroScene extends DemoScene {
 
     // default camera position is (0, 0, 10)
     this.renderer.camera.position.z = 80
+
+    // feel free to tweak the light position and see how it goes
+    this.lightPosition = new Vec3(50, 20, 100)
 
     this.meshes = []
 
@@ -80,11 +83,64 @@ export class IntroScene extends DemoScene {
   createMeshes() {
     // now add meshes to our scene
     const boxGeometry = new BoxGeometry()
+    const sphereGeometry = new SphereGeometry()
+
+    const grey = new Vec3(0.35)
+    const gold = new Vec3(184 / 255, 162 / 255, 9 / 255)
+    const dark = new Vec3(0.05)
+
     for (let i = 0; i < this.nbMeshes; i++) {
+      const random = Math.random()
+      const meshColor = random < 0.5 ? grey : random > 0.85 ? dark : gold
+
       const mesh = new Mesh(this.renderer, {
         label: `Cube ${i}`,
-        geometry: boxGeometry,
-        frustumCulling: false,
+        geometry: Math.random() > 0.33 ? boxGeometry : sphereGeometry,
+        uniforms: {
+          ambientLight: {
+            visibility: ['fragment'],
+            struct: {
+              color: {
+                type: 'vec3f',
+                value: new Vec3(1),
+              },
+              intensity: {
+                type: 'f32',
+                value: 0.05,
+              },
+            },
+          },
+          directionalLight: {
+            visibility: ['fragment'],
+            struct: {
+              position: {
+                type: 'vec3f',
+                value: this.lightPosition,
+              },
+              intensity: {
+                type: 'f32',
+                value: 1,
+              },
+              color: {
+                type: 'vec3f',
+                value: new Vec3(1),
+              },
+            },
+          },
+          shading: {
+            visibility: ['fragment'],
+            struct: {
+              color: {
+                type: 'vec3f',
+                value: meshColor,
+              },
+              opacity: {
+                type: 'f32',
+                value: 1,
+              },
+            },
+          },
+        },
       })
 
       // set a random initial rotation
