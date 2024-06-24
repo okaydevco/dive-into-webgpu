@@ -1,8 +1,9 @@
-import { GPUCameraRenderer, GPUCurtains } from 'gpu-curtains'
+import { GPUCameraRenderer, GPUCurtains, GPUCurtainsRenderer } from 'gpu-curtains'
 import Lenis from 'lenis'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { IntroScene } from './intro-scene/IntroScene'
+import { PlanesScene } from './planes-scene/PlanesScene'
 
 export class Demo {
   constructor() {
@@ -67,6 +68,7 @@ export class Demo {
 
   createScenes() {
     this.createIntroScene()
+    this.createPlanesScene()
 
     this.lenis.on('scroll', (e) => {
       this.gpuCurtains.updateScrollValues({ x: 0, y: e.scroll })
@@ -86,6 +88,19 @@ export class Demo {
     })
 
     this.scenes.push(introScene)
+  }
+
+  createPlanesScene() {
+    const planesScene = new PlanesScene({
+      renderer: new GPUCurtainsRenderer({
+        deviceManager: this.deviceManager,
+        label: 'Planes scene renderer',
+        container: '#planes-scene-canvas',
+        pixelRatio: this.pixelRatio,
+      }),
+    })
+
+    this.scenes.push(planesScene)
   }
 
   destroyScenes() {
