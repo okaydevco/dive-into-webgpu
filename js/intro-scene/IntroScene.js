@@ -63,7 +63,10 @@ export class IntroScene extends DemoScene {
   addEnteringAnimation() {
     this.animations = {
       meshesPositionProgress: 0,
+      lightIntensity: 1,
     }
+
+    this.autoAlphaElements = this.section.querySelectorAll('.gsap-auto-alpha')
 
     this.timeline = gsap
       .timeline({
@@ -75,6 +78,35 @@ export class IntroScene extends DemoScene {
         ease: 'expo.out',
         duration: 2,
       })
+      .fromTo(
+        this.animations,
+        {
+          lightIntensity: 1,
+        },
+        {
+          lightIntensity: 0.6,
+          duration: 0.5,
+          onUpdate: () => {
+            this.meshes.forEach((mesh) => {
+              mesh.uniforms.directionalLight.intensity.value = this.animations.lightIntensity
+            })
+          },
+        },
+        1
+      )
+      .fromTo(
+        this.autoAlphaElements,
+        {
+          autoAlpha: 0,
+        },
+        {
+          autoAlpha: 1,
+          duration: 1,
+          stagger: 0.125,
+          ease: 'power2.inOut',
+        },
+        0.75
+      )
   }
 
   removeEnteringAnimation() {
@@ -197,6 +229,8 @@ export class IntroScene extends DemoScene {
       mesh.rotation.add(
         mesh.userData.currentPosition.normalize().multiplyScalar((1.025 - this.animations.meshesPositionProgress) * 0.2)
       )
+
+      mesh.uniforms.shading.opacity.value = this.animations.meshesPositionProgress
     })
   }
 }
