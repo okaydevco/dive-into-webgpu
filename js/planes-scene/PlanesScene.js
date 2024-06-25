@@ -25,6 +25,9 @@ export class PlanesScene extends DemoScene {
   }
 
   setupWebGPU() {
+    // keep track of the number of planes currently animated
+    let nbAnimatedPlanes = 0
+
     this.planesElements.forEach((planeEl, index) => {
       const plane = new Plane(this.renderer, planeEl, {
         label: `Plane ${index}`,
@@ -67,11 +70,16 @@ export class PlanesScene extends DemoScene {
               const textureScale = 1.5 - plane.uniforms.params.opacity.value * 0.5
               plane.domTextures[0]?.scale.set(textureScale, textureScale, 1)
             },
+            onComplete: () => {
+              nbAnimatedPlanes--
+            },
           }
         )
 
       plane.onReEnterView(() => {
-        plane.userData.animationTimeline.restart()
+        nbAnimatedPlanes++
+        plane.userData.animationTimeline.delay(nbAnimatedPlanes * 0.1)
+        plane.userData.animationTimeline.restart(true)
       })
 
       this.planes.push(plane)
