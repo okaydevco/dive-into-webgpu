@@ -5,6 +5,7 @@ import {
   additionalFragmentHead,
   ambientContribution,
   lightContribution,
+  preliminaryColorContribution,
 } from '../shaders/chunks/gltf-contributions.wgsl'
 import { gsap } from 'gsap'
 
@@ -59,6 +60,8 @@ export class GLTFScene extends DemoScene {
   }
 
   removeButtonInteractions() {
+    this.updateColorTween?.kill()
+
     this.buttons.forEach((button) => {
       button.removeEventListener('click', this._buttonClickHandler)
     })
@@ -68,7 +71,7 @@ export class GLTFScene extends DemoScene {
     const { target } = e
     const cardName = target.hasAttribute('data-card-name') ? target.getAttribute('data-card-name') : this.cards[0].name
 
-    const card = this.cards.find((c) => c.name === cardName)
+    const cardIndex = this.cards.findIndex((c) => c.name === cardName)
 
     // remove all previous card name classes
     this.cards.forEach((card) => {
@@ -78,8 +81,31 @@ export class GLTFScene extends DemoScene {
     // add active card class name
     this.section.classList.add(cardName)
 
-    this.gltfMeshes?.forEach((mesh) => {
-      mesh.uniforms.interaction.baseColorFactor.value.copy(card.baseColorFactor)
+    const changeProgress = {
+      value: 0,
+    }
+
+    this.updateColorTween?.kill()
+
+    this.updateColorTween = gsap.to(changeProgress, {
+      value: 1,
+      duration: 1.25,
+      ease: 'expo.inOut',
+      onStart: () => {
+        this.gltfMeshes.forEach((mesh) => {
+          mesh.uniforms.interaction.nextBaseColorBlendIndex.value = cardIndex
+        })
+      },
+      onUpdate: () => {
+        this.gltfMeshes.forEach((mesh) => {
+          mesh.uniforms.interaction.colorChangeProgress.value = changeProgress.value
+        })
+      },
+      onComplete: () => {
+        this.gltfMeshes.forEach((mesh) => {
+          mesh.uniforms.interaction.currentBaseColorBlendIndex.value = cardIndex
+        })
+      },
     })
   }
 
@@ -189,14 +215,33 @@ export class GLTFScene extends DemoScene {
       const lightPosition = new Vec3(-radius * 1.25, radius * 0.5, radius * 1.5)
       const lightPositionLength = lightPosition.length()
 
+      // put all base color factors into a single array
+      const baseColorFactorsArray = this.cards
+        .map((card) => {
+          return [card.baseColorFactor.x, card.baseColorFactor.y, card.baseColorFactor.z]
+        })
+        .flat()
+
       parameters.uniforms = {
         ...parameters.uniforms,
         ...{
           interaction: {
             struct: {
-              baseColorFactor: {
-                type: 'vec3f',
-                value: this.cards[0].baseColorFactor.clone(),
+              baseColorFactorsArray: {
+                type: 'array<vec3f>', // we can pass an array of values!
+                value: baseColorFactorsArray,
+              },
+              currentBaseColorBlendIndex: {
+                type: 'i32',
+                value: 0,
+              },
+              nextBaseColorBlendIndex: {
+                type: 'i32',
+                value: 0,
+              },
+              colorChangeProgress: {
+                type: 'f32',
+                value: 0,
               },
             },
           },
@@ -238,6 +283,7 @@ export class GLTFScene extends DemoScene {
       parameters.shaders = buildPBRShaders(meshDescriptor, {
         chunks: {
           additionalFragmentHead,
+          preliminaryColorContribution,
           ambientContribution,
           lightContribution,
         },
