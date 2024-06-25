@@ -4,6 +4,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { IntroScene } from './intro-scene/IntroScene'
 import { PlanesScene } from './planes-scene/PlanesScene'
+import { GLTFScene } from './gltf-scene/GLTFScene'
 
 export class Demo {
   constructor() {
@@ -69,11 +70,12 @@ export class Demo {
   createScenes() {
     this.createIntroScene()
     this.createPlanesScene()
+    this.createGLTFScene()
 
     this.lenis.on('scroll', (e) => {
       this.gpuCurtains.updateScrollValues({ x: 0, y: e.scroll })
 
-      this.scenes.forEach((scene) => scene.onScroll(e.velocity, e.lastVelocity))
+      this.scenes.forEach((scene) => scene.onScroll(e.velocity))
     })
   }
 
@@ -101,6 +103,19 @@ export class Demo {
     })
 
     this.scenes.push(planesScene)
+  }
+
+  createGLTFScene() {
+    const gltfScene = new GLTFScene({
+      renderer: new GPUCurtainsRenderer({
+        deviceManager: this.deviceManager,
+        label: 'glTF scene renderer',
+        container: '#gltf-scene-canvas',
+        pixelRatio: this.pixelRatio,
+      }),
+    })
+
+    this.scenes.push(gltfScene)
   }
 
   destroyScenes() {
