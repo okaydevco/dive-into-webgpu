@@ -29,10 +29,58 @@ export class GLTFScene extends DemoScene {
 
   setupWebGPU() {
     this.loadGLTF()
+
+    this.addButtonInteractions()
   }
 
   destroyWebGPU() {
     this.gltfScenesManager?.destroy()
+    this.removeButtonInteractions()
+  }
+
+  addButtonInteractions() {
+    this.buttons = this.section.querySelectorAll('#gltf-scene-controls button')
+
+    // update card color
+    this.cards = [
+      { name: 'silver', baseColorFactor: new Vec3(1) },
+      { name: 'gold', baseColorFactor: new Vec3(240 / 255, 140 / 255, 15 / 255) },
+      { name: 'black', baseColorFactor: new Vec3(0.55) },
+    ]
+
+    // init with first color
+    this.section.classList.add(this.cards[0].name)
+
+    this._buttonClickHandler = this.onButtonClicked.bind(this)
+
+    this.buttons.forEach((button) => {
+      button.addEventListener('click', this._buttonClickHandler)
+    })
+  }
+
+  removeButtonInteractions() {
+    this.buttons.forEach((button) => {
+      button.removeEventListener('click', this._buttonClickHandler)
+    })
+  }
+
+  onButtonClicked(e) {
+    const { target } = e
+    const cardName = target.hasAttribute('data-card-name') ? target.getAttribute('data-card-name') : this.cards[0].name
+
+    const card = this.cards.find((c) => c.name === cardName)
+
+    // remove all previous card name classes
+    this.cards.forEach((card) => {
+      this.section.classList.remove(card.name)
+    })
+
+    // add active card class name
+    this.section.classList.add(cardName)
+
+    this.gltfMeshes?.forEach((mesh) => {
+      mesh.uniforms.interaction.baseColorFactor.value.copy(card.baseColorFactor)
+    })
   }
 
   addScrollTrigger() {
@@ -48,16 +96,6 @@ export class GLTFScene extends DemoScene {
 
   removeScrollTrigger() {
     this.scrollTrigger.kill()
-  }
-
-  onSceneVisibilityChanged(isVisible) {
-    if (isVisible) {
-      this.section.classList.add('is-visible')
-      this.renderer.shouldRenderScene = true
-    } else {
-      this.section.classList.remove('is-visible')
-      this.renderer.shouldRenderScene = false
-    }
   }
 
   onSceneVisibilityChanged(isVisible) {
@@ -150,11 +188,18 @@ export class GLTFScene extends DemoScene {
       // add lights
       const lightPosition = new Vec3(-radius * 1.25, radius * 0.5, radius * 1.5)
       const lightPositionLength = lightPosition.length()
-      const lightPositionLengthSq = lightPosition.lengthSq()
 
       parameters.uniforms = {
         ...parameters.uniforms,
         ...{
+          interaction: {
+            struct: {
+              baseColorFactor: {
+                type: 'vec3f',
+                value: this.cards[0].baseColorFactor.clone(),
+              },
+            },
+          },
           ambientLight: {
             struct: {
               intensity: {
@@ -175,7 +220,7 @@ export class GLTFScene extends DemoScene {
               },
               intensity: {
                 type: 'f32',
-                value: lightPositionLengthSq,
+                value: lightPositionLength * 0.75,
               },
               color: {
                 type: 'vec3f',
@@ -183,7 +228,7 @@ export class GLTFScene extends DemoScene {
               },
               range: {
                 type: 'f32',
-                value: lightPositionLength * 7.5,
+                value: lightPositionLength * 2.5,
               },
             },
           },

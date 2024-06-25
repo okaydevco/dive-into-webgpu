@@ -13,6 +13,9 @@ export const ambientContribution = /* wgsl */ `
 `
 
 export const lightContribution = /* wgsl */ `
+  // multiply our base color by the interaction base color factor
+  color = vec4(color.rgb * interaction.baseColorFactor, color.a);
+
   // here N, V and NdotV are already available
   // they are defined as follows
   // let N: vec3f = normalize(normal);
