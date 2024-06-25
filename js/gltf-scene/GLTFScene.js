@@ -88,8 +88,6 @@ export class GLTFScene extends DemoScene {
     updateParentNodeDepthPosition()
     this.parentNode.onAfterDOMElementResize(() => updateParentNodeDepthPosition())
 
-    this.parentNode.rotation.y = -Math.PI / 2.75
-
     // create a new sampler to address anisotropic issue
     this.anisotropicSampler = new Sampler(this.renderer, {
       label: 'Anisotropic sampler',
@@ -163,5 +161,10 @@ export class GLTFScene extends DemoScene {
         },
       })
     })
+  }
+
+  onRender() {
+    // temp, will be changed later on
+    this.parentNode.rotation.y += 0.01
   }
 }
