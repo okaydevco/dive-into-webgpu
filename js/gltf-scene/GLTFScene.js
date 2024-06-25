@@ -1,4 +1,4 @@
-import { GLTFLoader, GLTFScenesManager } from 'gpu-curtains'
+import { buildShaders, DOMObject3D, GLTFLoader, GLTFScenesManager } from 'gpu-curtains'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
 
@@ -9,6 +9,14 @@ export class GLTFScene extends DemoScene {
 
   init() {
     this.section = document.querySelector('#gltf-scene')
+    this.gltfElement = document.querySelector('#gltf-scene-object')
+
+    this.parentNode = new DOMObject3D(this.renderer, this.gltfElement, {
+      watchScroll: false, // no need to watch the scroll
+    })
+
+    // add it to the scene graph
+    this.parentNode.parent = this.renderer.scene
 
     super.init()
   }
@@ -57,14 +65,31 @@ export class GLTFScene extends DemoScene {
 
     const { scenesManager } = this.gltfScenesManager
     const { node, boundingBox } = scenesManager
-    const { center, radius } = boundingBox
+    const { center } = boundingBox
 
     // center the scenes manager parent node
     node.position.sub(center)
+    // add parent DOMObject3D as the scenes manager node parent
+    node.parent = this.parentNode
 
-    // position camera based on glTF scene bounding box radius
-    this.renderer.camera.position.z = radius * 2
+    // copy new scenes bounding box into DOMObject3D own bounding box
+    this.parentNode.boundingBox.copy(boundingBox)
 
-    this.gltfMeshes = this.gltfScenesManager.addMeshes()
+    const updateParentNodeDepthPosition = () => {
+      // move our parent node along the Z axis so the glTF front face lies at (0, 0, 0) instead of the glTF’s center
+      this.parentNode.position.z = -0.5 * this.parentNode.boundingBox.size.z * this.parentNode.DOMObjectWorldScale.z
+    }
+
+    updateParentNodeDepthPosition()
+    this.parentNode.onAfterDOMElementResize(() => updateParentNodeDepthPosition())
+
+    this.gltfMeshes = this.gltfScenesManager.addMeshes((meshDescriptor) => {
+      const { parameters } = meshDescriptor
+
+      // disable frustum culling
+      parameters.frustumCulling = false
+
+      parameters.shaders = buildShaders(meshDescriptor)
+    })
   }
 }
