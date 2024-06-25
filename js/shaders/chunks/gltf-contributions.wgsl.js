@@ -179,7 +179,11 @@ export const preliminaryColorContribution = /* wgsl */ `
   // and our custom animation based on progress
   let p: vec2f = mix(uv, fsInput.uv, smoothstep(0.0, 1.0, progress)) / vec2(1.0);
     
-  color = mix(currentColor, nextColor, step(p.x, progress));
+  // add a little white border on the edge of the animation
+  // use vec4(3.0) to oversaturate the result
+  color = mix(currentColor, vec4(3.0), step(p.x, progress + 0.1 * pow(mappedProgress, 0.5)));
+  
+  color = mix(color, nextColor, step(p.x, progress));
 `
 
 export const lightContribution = /* wgsl */ `
