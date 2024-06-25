@@ -6,6 +6,7 @@ import {
   ambientContribution,
   lightContribution,
 } from '../shaders/chunks/gltf-contributions.wgsl'
+import { gsap } from 'gsap'
 
 export class GLTFScene extends DemoScene {
   constructor({ renderer }) {
@@ -59,6 +60,42 @@ export class GLTFScene extends DemoScene {
     }
   }
 
+  onSceneVisibilityChanged(isVisible) {
+    if (isVisible) {
+      this.section.classList.add('is-visible')
+      this.renderer.shouldRenderScene = true
+      this.timeline?.restart(true)
+    } else {
+      this.section.classList.remove('is-visible')
+      this.renderer.shouldRenderScene = false
+      this.timeline?.paused()
+    }
+  }
+
+  addEnteringAnimation() {
+    this.autoAlphaElements = this.section.querySelectorAll('.gsap-auto-alpha')
+
+    this.timeline = gsap
+      .timeline({
+        paused: true,
+      })
+      .set(this.autoAlphaElements, { autoAlpha: 0 })
+      .to(
+        this.autoAlphaElements,
+        {
+          autoAlpha: 1,
+          duration: 1,
+          stagger: 0.125,
+          ease: 'power2.inOut',
+        },
+        0.5
+      )
+  }
+
+  removeEnteringAnimation() {
+    this.timeline.kill()
+  }
+
   async loadGLTF() {
     this.gltfLoader = new GLTFLoader()
     this.gltf = await this.gltfLoader.loadFromUrl('/assets/gltf/metal_credit_card.glb')
@@ -87,8 +124,6 @@ export class GLTFScene extends DemoScene {
 
     updateParentNodeDepthPosition()
     this.parentNode.onAfterDOMElementResize(() => updateParentNodeDepthPosition())
-
-    this.parentNode.rotation.y = -Math.PI / 2.75
 
     // create a new sampler to address anisotropic issue
     this.anisotropicSampler = new Sampler(this.renderer, {
@@ -163,5 +198,10 @@ export class GLTFScene extends DemoScene {
         },
       })
     })
+  }
+
+  onRender() {
+    // temp, will be changed later on
+    this.parentNode.rotation.y += 0.01
   }
 }
