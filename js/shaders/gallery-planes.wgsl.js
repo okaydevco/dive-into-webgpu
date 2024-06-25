@@ -25,6 +25,9 @@ export const planesFs = /* wgsl */ `
   };
   
   @fragment fn main(fsInput: VSOutput) -> @location(0) vec4f {
-    return textureSample(planeTexture, defaultSampler, fsInput.uv);
+    var color: vec4f = textureSample(planeTexture, defaultSampler, fsInput.uv);
+
+    color.a *= params.opacity;
+    return color;
   }
 `

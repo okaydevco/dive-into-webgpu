@@ -3,6 +3,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
 import { planesFs, planesVs } from '../shaders/gallery-planes.wgsl'
 import { galleryShaderPassFs } from '../shaders/gallery-shader-pass.wgsl'
+import { gsap } from 'gsap'
 
 export class PlanesScene extends DemoScene {
   constructor({ renderer }) {
@@ -38,6 +39,39 @@ export class PlanesScene extends DemoScene {
         texturesOptions: {
           generateMips: true,
         },
+        transparent: true,
+        uniforms: {
+          params: {
+            struct: {
+              opacity: {
+                type: 'f32',
+                value: 1,
+              },
+            },
+          },
+        },
+      })
+
+      plane.userData.animationTimeline = gsap
+        .timeline({
+          paused: true,
+        })
+        .fromTo(
+          plane.uniforms.params.opacity,
+          { value: 0 },
+          {
+            value: 1,
+            duration: 1.5,
+            ease: 'expo.out',
+            onUpdate: () => {
+              const textureScale = 1.5 - plane.uniforms.params.opacity.value * 0.5
+              plane.domTextures[0]?.scale.set(textureScale, textureScale, 1)
+            },
+          }
+        )
+
+      plane.onReEnterView(() => {
+        plane.userData.animationTimeline.restart()
       })
 
       this.planes.push(plane)
@@ -77,6 +111,7 @@ export class PlanesScene extends DemoScene {
 
   destroyWebGPU() {
     this.planes.forEach((plane) => {
+      plane.userData.animationTimeline.kill()
       plane.remove()
     })
 
@@ -102,10 +137,38 @@ export class PlanesScene extends DemoScene {
     if (isVisible) {
       this.section.classList.add('is-visible')
       this.renderer.shouldRenderScene = true
+      this.timeline?.restart(true)
     } else {
       this.section.classList.remove('is-visible')
       this.renderer.shouldRenderScene = false
+      this.timeline?.paused()
     }
+  }
+
+  addEnteringAnimation() {
+    this.autoAlphaElements = this.section.querySelectorAll('.gsap-auto-alpha')
+
+    this.timeline = gsap
+      .timeline({
+        paused: true,
+      })
+      .fromTo(
+        this.autoAlphaElements,
+        {
+          autoAlpha: 0,
+        },
+        {
+          autoAlpha: 1,
+          duration: 1,
+          stagger: 0.2,
+          ease: 'power2.inOut',
+        },
+        0.25
+      )
+  }
+
+  removeEnteringAnimation() {
+    this.timeline.kill()
   }
 
   onScroll(velocity = 0) {
