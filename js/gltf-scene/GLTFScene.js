@@ -140,7 +140,6 @@ export class GLTFScene extends DemoScene {
       // add lights
       const lightPosition = new Vec3(-radius * 1.25, radius * 0.5, radius * 1.5)
       const lightPositionLength = lightPosition.length()
-      const lightPositionLengthSq = lightPosition.lengthSq()
 
       parameters.uniforms = {
         ...parameters.uniforms,
@@ -165,7 +164,7 @@ export class GLTFScene extends DemoScene {
               },
               intensity: {
                 type: 'f32',
-                value: lightPositionLengthSq,
+                value: lightPositionLength * 0.75,
               },
               color: {
                 type: 'vec3f',
@@ -173,7 +172,7 @@ export class GLTFScene extends DemoScene {
               },
               range: {
                 type: 'f32',
-                value: lightPositionLength * 7.5,
+                value: lightPositionLength * 2.5,
               },
             },
           },
