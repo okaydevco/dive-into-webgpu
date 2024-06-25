@@ -54,16 +54,6 @@ export class GLTFScene extends DemoScene {
     if (isVisible) {
       this.section.classList.add('is-visible')
       this.renderer.shouldRenderScene = true
-    } else {
-      this.section.classList.remove('is-visible')
-      this.renderer.shouldRenderScene = false
-    }
-  }
-
-  onSceneVisibilityChanged(isVisible) {
-    if (isVisible) {
-      this.section.classList.add('is-visible')
-      this.renderer.shouldRenderScene = true
       this.timeline?.restart(true)
     } else {
       this.section.classList.remove('is-visible')
