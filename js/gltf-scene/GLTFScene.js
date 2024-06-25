@@ -139,11 +139,30 @@ export class GLTFScene extends DemoScene {
   addEnteringAnimation() {
     this.autoAlphaElements = this.section.querySelectorAll('.gsap-auto-alpha')
 
+    // animation
+    this.animations = {
+      meshesProgress: 0,
+    }
+
     this.timeline = gsap
       .timeline({
         paused: true,
       })
+      .call(() => {
+        // reset mouse interaction and parent node scale on start
+        this.mouse.currentInteraction.set(0)
+        this.parentNode.scale.set(0)
+      })
       .set(this.autoAlphaElements, { autoAlpha: 0 })
+      .to(this.animations, {
+        meshesProgress: 1,
+        ease: 'expo.out',
+        duration: 3,
+        delay: 0.25,
+        onUpdate: () => {
+          this.parentNode.scale.set(this.animations.meshesProgress)
+        },
+      })
       .to(
         this.autoAlphaElements,
         {
@@ -369,6 +388,6 @@ export class GLTFScene extends DemoScene {
     this.mouse.lerpedInteraction.lerp(this.mouse.currentInteraction, 0.2)
 
     this.parentNode.rotation.x = this.mouse.lerpedInteraction.y
-    this.parentNode.rotation.y = this.mouse.lerpedInteraction.x
+    this.parentNode.rotation.y = this.animations.meshesProgress * Math.PI * 4 + this.mouse.lerpedInteraction.x
   }
 }
