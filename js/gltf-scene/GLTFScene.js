@@ -1,6 +1,11 @@
-import { buildShaders, DOMObject3D, GLTFLoader, GLTFScenesManager } from 'gpu-curtains'
+import { buildPBRShaders, DOMObject3D, GLTFLoader, GLTFScenesManager, Sampler, Vec3 } from 'gpu-curtains'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
+import {
+  additionalFragmentHead,
+  ambientContribution,
+  lightContribution,
+} from '../shaders/chunks/gltf-contributions.wgsl'
 
 export class GLTFScene extends DemoScene {
   constructor({ renderer }) {
@@ -65,7 +70,7 @@ export class GLTFScene extends DemoScene {
 
     const { scenesManager } = this.gltfScenesManager
     const { node, boundingBox } = scenesManager
-    const { center } = boundingBox
+    const { center, radius } = boundingBox
 
     // center the scenes manager parent node
     node.position.sub(center)
@@ -83,13 +88,80 @@ export class GLTFScene extends DemoScene {
     updateParentNodeDepthPosition()
     this.parentNode.onAfterDOMElementResize(() => updateParentNodeDepthPosition())
 
+    this.parentNode.rotation.y = -Math.PI / 2.75
+
+    // create a new sampler to address anisotropic issue
+    this.anisotropicSampler = new Sampler(this.renderer, {
+      label: 'Anisotropic sampler',
+      name: 'anisotropicSampler',
+      maxAnisotropy: 16,
+    })
+
     this.gltfMeshes = this.gltfScenesManager.addMeshes((meshDescriptor) => {
       const { parameters } = meshDescriptor
 
       // disable frustum culling
       parameters.frustumCulling = false
 
-      parameters.shaders = buildShaders(meshDescriptor)
+      // add anisotropic sampler to the parameters
+      parameters.samplers.push(this.anisotropicSampler)
+
+      // assign our anisotropic sampler
+      // to every textureSample calls used inside our buildPBRShaders function
+      meshDescriptor.textures.forEach((texture) => {
+        texture.sampler = this.anisotropicSampler.name
+      })
+
+      // add lights
+      const lightPosition = new Vec3(-radius * 1.25, radius * 0.5, radius * 1.5)
+      const lightPositionLength = lightPosition.length()
+      const lightPositionLengthSq = lightPosition.lengthSq()
+
+      parameters.uniforms = {
+        ...parameters.uniforms,
+        ...{
+          ambientLight: {
+            struct: {
+              intensity: {
+                type: 'f32',
+                value: 0.35,
+              },
+              color: {
+                type: 'vec3f',
+                value: new Vec3(1),
+              },
+            },
+          },
+          pointLight: {
+            struct: {
+              position: {
+                type: 'vec3f',
+                value: lightPosition,
+              },
+              intensity: {
+                type: 'f32',
+                value: lightPositionLengthSq,
+              },
+              color: {
+                type: 'vec3f',
+                value: new Vec3(1),
+              },
+              range: {
+                type: 'f32',
+                value: lightPositionLength * 7.5,
+              },
+            },
+          },
+        },
+      }
+
+      parameters.shaders = buildPBRShaders(meshDescriptor, {
+        chunks: {
+          additionalFragmentHead,
+          ambientContribution,
+          lightContribution,
+        },
+      })
     })
   }
 }
