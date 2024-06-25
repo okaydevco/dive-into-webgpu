@@ -1,4 +1,4 @@
-import { buildPBRShaders, DOMObject3D, GLTFLoader, GLTFScenesManager, Sampler, Vec3 } from 'gpu-curtains'
+import { buildPBRShaders, DOMObject3D, GLTFLoader, GLTFScenesManager, Sampler, Vec2, Vec3 } from 'gpu-curtains'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
 import {
@@ -200,8 +200,84 @@ export class GLTFScene extends DemoScene {
     })
   }
 
+  addEvents() {
+    this.gltfContainer = document.querySelector('#gltf-scene-object-container')
+
+    this.mouse = {
+      lerpedInteraction: new Vec2(),
+      currentInteraction: new Vec2(),
+      last: new Vec2(),
+      multiplier: 0.015,
+      isDown: false,
+    }
+
+    this._onPointerDownHandler = this.onPointerDown.bind(this)
+    this._onPointerUpHandler = this.onPointerUp.bind(this)
+    this._onPointerMoveHandler = this.onPointerMove.bind(this)
+
+    this.section.addEventListener('mousedown', this._onPointerDownHandler)
+    this.section.addEventListener('mouseup', this._onPointerUpHandler)
+    this.gltfContainer.addEventListener('mousemove', this._onPointerMoveHandler)
+
+    this.section.addEventListener('touchstart', this._onPointerDownHandler, {
+      passive: true,
+    })
+    this.section.addEventListener('touchend', this._onPointerUpHandler)
+    this.gltfContainer.addEventListener('touchmove', this._onPointerMoveHandler, {
+      passive: true,
+    })
+  }
+
+  removeEvents() {
+    this.section.removeEventListener('mousedown', this._onPointerDownHandler)
+    this.section.removeEventListener('mouseup', this._onPointerUpHandler)
+    this.gltfContainer.removeEventListener('mousemove', this._onPointerMoveHandler)
+
+    this.section.removeEventListener('touchstart', this._onPointerDownHandler, {
+      passive: true,
+    })
+    this.section.removeEventListener('touchend', this._onPointerUpHandler)
+    this.gltfContainer.removeEventListener('touchmove', this._onPointerMoveHandler, {
+      passive: true,
+    })
+  }
+
+  onPointerDown(e) {
+    if (e.which === 1 || (e.targetTouches && e.targetTouches.length)) {
+      this.mouse.isDown = true
+    }
+
+    const { clientX, clientY } = e.targetTouches && e.targetTouches.length ? e.targetTouches[0] : e
+    this.mouse.last.set(clientX, clientY)
+  }
+
+  onPointerUp() {
+    this.mouse.isDown = false
+  }
+
+  onPointerMove(e) {
+    if (this.mouse.isDown) {
+      const { clientX, clientY } = e.targetTouches && e.targetTouches.length ? e.targetTouches[0] : e
+
+      const xDelta = clientX - this.mouse.last.x
+      const yDelta = clientY - this.mouse.last.y
+
+      this.mouse.currentInteraction.x += xDelta * this.mouse.multiplier
+      this.mouse.currentInteraction.y += yDelta * this.mouse.multiplier
+
+      // clamp X rotation
+      this.mouse.currentInteraction.y = Math.max(-Math.PI / 4, Math.min(Math.PI / 4, this.mouse.currentInteraction.y))
+
+      this.mouse.last.set(clientX, clientY)
+    }
+  }
+
   onRender() {
-    // temp, will be changed later on
-    this.parentNode.rotation.y += 0.01
+    if (!this.shouldRender) return
+
+    this.mouse.lerpedInteraction.lerp(this.mouse.currentInteraction, 0.2)
+
+    this.parentNode.rotation.x = this.mouse.lerpedInteraction.y
+    this.parentNode.rotation.y = this.mouse.lerpedInteraction.x
   }
 }
