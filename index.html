@@ -114,6 +114,42 @@
           </div>
         </div>
       </section>
+
+      <section id="gltf-scene">
+        <div id="gltf-scene-grid" class="container">
+          <div id="gltf-scene-content">
+            <h2 class="gsap-auto-alpha">A 3D product configurator</h2>
+            <p class="gsap-auto-alpha">
+              Load a glTF and synced its size and position with a DOM element. Apply a physically based rendering shader
+              and customized it to update the mesh base color.
+            </p>
+            <p class="small gsap-auto-alpha">
+              Model by <a href="https://sketchfab.com/maxitaxx" title="Maxitaxx">Maxitaxx</a>.
+            </p>
+          </div>
+
+          <div id="gltf-scene-object-container">
+            <div id="gltf-scene-object">
+              <div id="gltf-scene-canvas"></div>
+            </div>
+          </div>
+
+          <nav id="gltf-scene-controls" class="small">
+            <div id="gltf-scene-controls-buttons">
+              <span class="gsap-auto-alpha">Pick a color</span>
+              <button arial-label="Silver" class="silver gsap-auto-alpha" data-card-name="silver">
+                <span>Silver</span>
+              </button>
+              <button arial-label="Gold" class="gold gsap-auto-alpha" data-card-name="gold">
+                <span>Gold</span>
+              </button>
+              <button arial-label="Black" class="black gsap-auto-alpha" data-card-name="black">
+                <span>Black</span>
+              </button>
+            </div>
+          </nav>
+        </div>
+      </section>
     </main>
 
     <script type="module" src="js/main.js"></script>

@@ -287,6 +287,130 @@
     opacity: 1;
     transition: opacity 0.5s 0.5s;
   }
+
+  /* GLTF SCENE */
+
+  #gltf-scene {
+    position: relative;
+    min-height: 120svh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    transition: color 0.5s ease-in-out, background 0.5s ease-in-out;
+  }
+
+  #gltf-scene,
+  #gltf-scene.silver {
+    background: #333333;
+    color: #ffffff;
+  }
+
+  #gltf-scene.gold {
+    background: #ffe364;
+    color: #000000;
+  }
+
+  #gltf-scene.black {
+    background: #dddddd;
+    color: #000000;
+  }
+
+  #gltf-scene-grid {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    margin: var(--basic-spacing) auto;
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-gap: 1rem;
+    align-items: center;
+  }
+
+  #gltf-scene-content {
+    grid-column: 2 / span 4;
+  }
+
+  #gltf-scene-object-container {
+    grid-column: 6 / span 7;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-gap: 1rem;
+  }
+
+  #gltf-scene-object {
+    position: relative;
+    grid-column: 2 / -3;
+    aspect-ratio: 16 / 10;
+  }
+
+  #gltf-scene-canvas {
+    position: absolute;
+    top: 50%;
+    right: -25%;
+    left: -25%;
+    aspect-ratio: 1.1;
+    transform: translate3d(0, -50%, 0);
+    pointer-events: none;
+  }
+
+  .no-webgpu #gltf-scene-object {
+    background-image: url('/assets/fallbacks/gltf-scene-bg.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .no-webgpu #gltf-scene.is-visible #gltf-scene-object {
+    opacity: 1;
+    transition: opacity 1s;
+  }
+
+  #gltf-scene-controls {
+    grid-column: 2 / -3;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 3rem;
+  }
+
+  .no-webgpu #gltf-scene-controls {
+    display: none;
+  }
+
+  #gltf-scene-controls-buttons {
+    display: flex;
+    align-items: center;
+  }
+
+  #gltf-scene-controls-buttons span {
+    margin-right: 2em;
+  }
+
+  #gltf-scene-controls button {
+    background: #aaaaaa;
+    font: inherit;
+    display: block;
+    width: 2em;
+    height: 2em;
+    margin-left: 1em;
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  #gltf-scene-controls button.gold {
+    background: #b8a209;
+  }
+
+  #gltf-scene-controls button.black {
+    background: #444444;
+  }
+
+  #gltf-scene-controls button span {
+    pointer-events: none;
+    display: inline-flex;
+    text-indent: -9999rem;
+  }
 }
 
 @media screen and (max-width: 1024px) {
@@ -296,6 +420,27 @@
 
   .small {
     font-size: 0.9em;
+  }
+
+  /* GLTF SCENE */
+
+  #gltf-scene-content {
+    grid-column: 2 / -2;
+  }
+
+  #gltf-scene-object-container {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(12, 1fr);
+    padding: 5rem 0;
+  }
+
+  #gltf-scene-object {
+    grid-column: 4 / -4;
+  }
+
+  #gltf-scene-controls {
+    grid-column: 2 / -2;
+    justify-content: center;
   }
 }
 
@@ -318,5 +463,38 @@
     grid-column: 1 / -1 !important;
     aspect-ratio: 16 / 9 !important;
     margin: 0 !important;
+  }
+
+  /* GLTF SCENE */
+
+  #gltf-scene-content {
+    grid-column: 1 / -1;
+  }
+
+  #gltf-scene-object-container {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(12, 1fr);
+    padding: 3rem 0;
+  }
+
+  #gltf-scene-object {
+    grid-column: 2 / -2;
+  }
+
+  #gltf-scene-controls {
+    margin-top: 0;
+  }
+
+  #gltf-scene-controls-buttons {
+    flex-wrap: wrap;
+  }
+
+  #gltf-scene-controls-buttons span {
+    flex-basis: 100%;
+    margin: 0 0 1rem 0;
+  }
+
+  #gltf-scene-controls-buttons button {
+    margin: 0 1.5rem 0 0;
   }
 }
