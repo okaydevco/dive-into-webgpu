@@ -15,6 +15,11 @@ export class PlanesScene extends DemoScene {
     this.planes = []
     this.planesElements = document.querySelectorAll('#planes-scene .plane')
 
+    this.velocity = {
+      weightRatio: 0.75, // the smaller, the closer to the original velocity value
+      weighted: 0,
+    }
+
     super.init()
   }
 
@@ -53,6 +58,20 @@ export class PlanesScene extends DemoScene {
           addressModeV: 'clamp-to-edge',
         }),
       ],
+      uniforms: {
+        deformation: {
+          struct: {
+            maxStrength: {
+              type: 'f32',
+              value: 0.1,
+            },
+            scrollStrength: {
+              type: 'f32',
+              value: 0,
+            },
+          },
+        },
+      },
     })
   }
 
@@ -86,6 +105,18 @@ export class PlanesScene extends DemoScene {
     } else {
       this.section.classList.remove('is-visible')
       this.renderer.shouldRenderScene = false
+    }
+  }
+
+  onScroll(velocity = 0) {
+    // no weight if current velocity is null
+    const weight = velocity ? Math.abs(velocity - this.velocity.weighted) * this.velocity.weightRatio : 0
+
+    // apply weight
+    this.velocity.weighted = (this.velocity.weighted * weight + Math.abs(velocity)) / (weight + 1)
+
+    if (this.shaderPass) {
+      this.shaderPass.uniforms.deformation.scrollStrength.value = this.velocity.weighted * 0.05
     }
   }
 }

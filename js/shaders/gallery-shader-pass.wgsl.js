@@ -13,7 +13,8 @@ export const galleryShaderPassFs = /* wgsl */ `
     // apply deformation
     let uvDeformation: f32 = cos(abs(uv.y) * 3.141592 * 0.5);
     
-    uv.x *= 1.0 + uvDeformation;
+    // apply deformation uniforms
+    uv.x *= 1.0 + deformation.maxStrength * deformation.scrollStrength * uvDeformation;
     
     // convert back to [0, 1]
     uv = uv * 0.5 + 0.5;
