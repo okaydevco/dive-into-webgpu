@@ -71,7 +71,7 @@ export class Demo {
     this.lenis.on('scroll', (e) => {
       this.gpuCurtains.updateScrollValues({ x: 0, y: e.scroll })
 
-      this.scenes.forEach((scene) => scene.onScroll(e.velocity, e.lastVelocity))
+      this.scenes.forEach((scene) => scene.onScroll(e.velocity))
     })
   }
 
