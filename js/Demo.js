@@ -5,6 +5,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { IntroScene } from './intro-scene/IntroScene'
 import { PlanesScene } from './planes-scene/PlanesScene'
 import { GLTFScene } from './gltf-scene/GLTFScene'
+import { ShadowedParticlesScene } from './shadowed-particles-scene/ShadowedParticlesScene'
 
 export class Demo {
   constructor() {
@@ -71,6 +72,7 @@ export class Demo {
     this.createIntroScene()
     this.createPlanesScene()
     this.createGLTFScene()
+    this.createShadowedParticlesScene()
 
     this.lenis.on('scroll', (e) => {
       this.gpuCurtains.updateScrollValues({ x: 0, y: e.scroll })
@@ -116,6 +118,19 @@ export class Demo {
     })
 
     this.scenes.push(gltfScene)
+  }
+
+  createShadowedParticlesScene() {
+    const shadowedParticlesScene = new ShadowedParticlesScene({
+      renderer: new GPUCameraRenderer({
+        deviceManager: this.deviceManager,
+        label: 'Shadowed particles scene renderer',
+        container: '#shadowed-particles-scene-canvas',
+        pixelRatio: this.pixelRatio,
+      }),
+    })
+
+    this.scenes.push(shadowedParticlesScene)
   }
 
   destroyScenes() {
