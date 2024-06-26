@@ -411,6 +411,71 @@
     display: inline-flex;
     text-indent: -9999rem;
   }
+
+  /* SHADOWED PARTICLES */
+
+  #shadowed-particles-scene {
+    position: relative;
+    height: 100lvh;
+    overflow: hidden;
+    background: #4c4c4c;
+    color: #ffffff;
+  }
+
+  .no-webgpu #shadowed-particles-scene:after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: url('/assets/fallbacks/shadowed-particles-scene-bg.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .no-webgpu #shadowed-particles-scene.is-visible:after {
+    opacity: 1;
+    transition: opacity 1s;
+  }
+
+  #shadowed-particles-scene-canvas {
+    position: absolute;
+    inset: 0;
+  }
+
+  #shadowed-particles-scene-content {
+    position: absolute;
+    inset: 0;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #shadowed-particles-scene-content h2 {
+    position: relative;
+    z-index: 1;
+    line-height: 1;
+    margin: 0 auto 4rem auto;
+    text-align: center;
+    width: 5em;
+    color: #cdcdcd;
+    font-size: 4rem;
+    mix-blend-mode: color-burn;
+  }
+
+  #shadowed-particles-scene-content p {
+    text-align: center;
+    text-shadow: #111111 0 0 0.75rem, #000000 0 0 0.15rem;
+  }
+
+  .no-webgpu #shadowed-particles-scene-content p {
+    position: relative;
+    z-index: 1;
+  }
 }
 
 @media screen and (max-width: 1024px) {
@@ -496,5 +561,11 @@
 
   #gltf-scene-controls-buttons button {
     margin: 0 1.5rem 0 0;
+  }
+
+  /* SHADOWED PARTICLES */
+
+  #shadowed-particles-scene-content h2 {
+    font-size: 3rem;
   }
 }
