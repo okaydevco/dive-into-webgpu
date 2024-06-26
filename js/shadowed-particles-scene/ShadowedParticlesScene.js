@@ -1,6 +1,6 @@
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
-import { BindGroup, BufferBinding, ComputePass, Mesh, Object3D, PlaneGeometry } from 'gpu-curtains'
+import { BindGroup, BufferBinding, ComputePass, Mesh, PlaneGeometry } from 'gpu-curtains'
 import { shadowedParticlesVs } from '../shaders/shadowed-particles.wgsl'
 import { computeParticles } from '../shaders/compute-particles.wgsl'
 
@@ -52,6 +52,10 @@ export class ShadowedParticlesScene extends DemoScene {
   }
 
   destroyWebGPU() {
+    // destroy both compute pass and compute bind group
+    this.computePass?.destroy()
+    this.computeBindGroup?.destroy()
+
     this.particlesSystem?.remove()
   }
 
@@ -91,7 +95,7 @@ export class ShadowedParticlesScene extends DemoScene {
           struct: {
             radius: {
               type: 'f32',
-              value: this.radius * 10, // * 10 for temporary debugging purpose
+              value: this.radius,
             },
             maxLife: {
               type: 'f32',
@@ -120,6 +124,21 @@ export class ShadowedParticlesScene extends DemoScene {
 
     // now run the compute pass just once
     this.renderer.renderOnce([computeInitDataPass])
+
+    this.computePass = new ComputePass(this.renderer, {
+      label: 'Compute particles pass',
+      shaders: {
+        compute: {
+          code: computeParticles,
+          entryPoint: 'updateData',
+        },
+      },
+      dispatchSize: Math.ceil(this.nbInstances / 256),
+      bindGroups: [this.computeBindGroup],
+    })
+
+    // we're done with our first compute pass, remove it
+    computeInitDataPass.remove()
   }
 
   createParticles() {
@@ -159,19 +178,5 @@ export class ShadowedParticlesScene extends DemoScene {
         },
       },
     })
-
-    // just to check the billboarding is actually working
-    this.cameraPivot = new Object3D()
-    this.cameraPivot.parent = this.renderer.scene
-    this.renderer.camera.position.z = this.radius * 15
-    this.renderer.camera.parent = this.cameraPivot
-  }
-
-  onRender() {
-    if (!this.shouldRender) return
-
-    if (this.cameraPivot) {
-      this.cameraPivot.rotation.y += 0.01
-    }
   }
 }
