@@ -5,6 +5,7 @@ import { particlesDepthPassShaders, shadowedParticlesFs, shadowedParticlesVs } f
 import { computeParticles } from '../shaders/compute-particles.wgsl'
 import { ShadowMap } from './ShadowMap'
 import { wrappingBoxFs, wrappingBoxVs } from '../shaders/shadowed-wrapping-box.wgsl'
+import { gsap } from 'gsap'
 
 export class ShadowedParticlesScene extends DemoScene {
   constructor({ renderer, nbInstances = 100_000 }) {
@@ -51,10 +52,53 @@ export class ShadowedParticlesScene extends DemoScene {
     if (isVisible) {
       this.section.classList.add('is-visible')
       this.renderer.shouldRender = true
+      this.timeline?.restart(true)
     } else {
       this.section.classList.remove('is-visible')
       this.renderer.shouldRender = false
+      this.timeline?.pause()
     }
+  }
+
+  addEnteringAnimation() {
+    this.animation = {
+      progress: 0,
+    }
+
+    this.autoAlphaElements = this.section.querySelectorAll('.gsap-auto-alpha')
+
+    // animation
+    this.timeline = gsap
+      .timeline({
+        paused: true,
+      })
+      .set(this.animation, { progress: 0 })
+      .fromTo(
+        this.autoAlphaElements,
+        {
+          autoAlpha: 0,
+        },
+        {
+          autoAlpha: 1,
+          duration: 1,
+          stagger: 0.2,
+          ease: 'power2.inOut',
+        },
+        0
+      )
+      .to(
+        this.animation,
+        {
+          progress: 0.7, // final particle size
+          duration: 1,
+          ease: 'expo.in',
+        },
+        0
+      )
+  }
+
+  removeEnteringAnimation() {
+    this.timeline.kill()
   }
 
   setupWebGPU() {
@@ -387,5 +431,9 @@ export class ShadowedParticlesScene extends DemoScene {
     if (!this.shouldRender) return
 
     this.mouse.lerped.lerp(this.mouse.current, 0.5)
+
+    if (this.particlesSystem) {
+      this.particlesSystem.uniforms.params.size.value = this.animation.progress
+    }
   }
 }
