@@ -81,10 +81,12 @@ export const computeParticles = /* wgsl */ `
       vVel *= 0.4;
 
       particles[index].velocity = vec4(vVel, particles[index].velocity.w);
+      
+      let mouse = vec3(params.mouse, 0);
 
       if (life <= 0.0) {
-        // respawn particle to original position
-        let newPosition = initParticles[index].position.xyz;
+        // respawn particle to original position + mouse position
+        let newPosition = initParticles[index].position.xyz + mouse;
 
         // reset init life to random value
         initParticles[index].position.w = getInitLife(fIndex * cos(fIndex));
@@ -97,6 +99,11 @@ export const computeParticles = /* wgsl */ `
         particles[index].velocity.w = initParticles[index].position.w;
       } else {
         // apply new curl noise position and life
+        // accounting for mouse position
+        let delta: vec3f = mouse - vPos;
+        let friction: f32 = 1000.0;
+        
+        vPos += delta * 1.0 / friction;
         vPos += vVel;
 
         particles[index].position = vec4(vPos, life);

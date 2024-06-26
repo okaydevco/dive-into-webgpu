@@ -1,6 +1,6 @@
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
-import { BindGroup, BufferBinding, ComputePass, Mesh, PlaneGeometry, Vec3 } from 'gpu-curtains'
+import { BindGroup, BufferBinding, ComputePass, Mesh, PlaneGeometry, Vec2, Vec3 } from 'gpu-curtains'
 import { shadowedParticlesFs, shadowedParticlesVs } from '../shaders/shadowed-particles.wgsl'
 import { computeParticles } from '../shaders/compute-particles.wgsl'
 
@@ -16,10 +16,18 @@ export class ShadowedParticlesScene extends DemoScene {
     // particle system radius
     this.radius = 50
 
-    // just so we can better visualize the shape of the particles
-    this.renderer.camera.position.z = 150
+    this.renderer.camera.position.z = 375
+
+    this.setSizeDependentValues()
+    this.renderer.onResize(this.setSizeDependentValues.bind(this))
 
     super.init()
+  }
+
+  setSizeDependentValues() {
+    // account for scroll on mouse move
+    this.offsetTop = this.renderer.boundingRect.top + window.pageYOffset
+    this.visibleSize = this.renderer.camera.getVisibleSizeAtDepth()
   }
 
   addScrollTrigger() {
@@ -88,7 +96,7 @@ export class ShadowedParticlesScene extends DemoScene {
     })
 
     this.computeBindGroup = new BindGroup(this.renderer, {
-      label: 'Compute particles bind group',
+      label: 'Compute instances bind group',
       bindings: [this.initComputeBuffer, this.updateComputeBuffer],
       uniforms: {
         params: {
@@ -101,6 +109,10 @@ export class ShadowedParticlesScene extends DemoScene {
             maxLife: {
               type: 'f32',
               value: 60, // in frames
+            },
+            mouse: {
+              type: 'vec2f',
+              value: this.mouse.lerped,
             },
           },
         },
@@ -204,5 +216,50 @@ export class ShadowedParticlesScene extends DemoScene {
         },
       },
     })
+  }
+
+  addEvents() {
+    this.mouse = {
+      current: new Vec2(),
+      lerped: new Vec2(),
+      clamp: {
+        min: new Vec2(-0.5),
+        max: new Vec2(0.5),
+      },
+    }
+
+    this._onPointerMoveHandler = this.onPointerMove.bind(this)
+    window.addEventListener('mousemove', this._onPointerMoveHandler)
+    window.addEventListener('touchmove', this._onPointerMoveHandler)
+  }
+
+  removeEvents() {
+    window.removeEventListener('mousemove', this._onPointerMoveHandler)
+    window.removeEventListener('touchmove', this._onPointerMoveHandler)
+  }
+
+  onPointerMove(e) {
+    const { clientX, clientY } = e.targetTouches && e.targetTouches.length ? e.targetTouches[0] : e
+    const { width, height } = this.renderer.boundingRect
+    const scroll = window.pageYOffset
+
+    // normalized between -0.5 and 0.5
+    this.mouse.current.set(
+      (clientX - width * 0.5) / width,
+      -(clientY - (this.offsetTop - scroll) - height * 0.5) / height
+    )
+
+    // clamp
+    this.mouse.current.clamp(this.mouse.clamp.min, this.mouse.clamp.max)
+
+    // multiply by camera visible size
+    this.mouse.current.x *= this.visibleSize.width
+    this.mouse.current.y *= this.visibleSize.height
+  }
+
+  onRender() {
+    if (!this.shouldRender) return
+
+    this.mouse.lerped.lerp(this.mouse.current, 0.5)
   }
 }
