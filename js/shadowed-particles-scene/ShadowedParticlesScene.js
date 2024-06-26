@@ -3,6 +3,7 @@ import { DemoScene } from '../DemoScene'
 import { BindGroup, BufferBinding, ComputePass, Mesh, PlaneGeometry, Vec2, Vec3 } from 'gpu-curtains'
 import { shadowedParticlesFs, shadowedParticlesVs } from '../shaders/shadowed-particles.wgsl'
 import { computeParticles } from '../shaders/compute-particles.wgsl'
+import { ShadowMap } from './ShadowMap'
 
 export class ShadowedParticlesScene extends DemoScene {
   constructor({ renderer, nbInstances = 100_000 }) {
@@ -48,19 +49,42 @@ export class ShadowedParticlesScene extends DemoScene {
   onSceneVisibilityChanged(isVisible) {
     if (isVisible) {
       this.section.classList.add('is-visible')
-      this.renderer.shouldRenderScene = true
+      this.renderer.shouldRender = true
     } else {
       this.section.classList.remove('is-visible')
-      this.renderer.shouldRenderScene = false
+      this.renderer.shouldRender = false
     }
   }
 
   setupWebGPU() {
+    const distance = this.renderer.camera.position.z
+
+    this.shadowMap = new ShadowMap({
+      renderer: this.renderer,
+      depthTextureSize: 1024,
+      light: {
+        position: new Vec3(distance * 0.5, distance * 0.325, distance * 0.5),
+        // add a bit of spacing on every side
+        // to avoid out of view particles to be culled
+        // by the shadow map orthographic matrix
+        orthographicCamera: {
+          left: distance * -1.05,
+          right: distance * 1.05,
+          top: distance * 1.05,
+          bottom: distance * -1.05,
+          near: 0.1,
+          far: distance * 5,
+        },
+      },
+    })
+
     this.createComputePasses()
     this.createParticles()
   }
 
   destroyWebGPU() {
+    this.shadowMap.destroy()
+
     // destroy both compute pass and compute bind group
     this.computePass?.destroy()
     this.computeBindGroup?.destroy()
