@@ -1,9 +1,10 @@
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
-import { BindGroup, BufferBinding, ComputePass, Mesh, PlaneGeometry, Vec2, Vec3 } from 'gpu-curtains'
+import { BindGroup, BoxGeometry, BufferBinding, ComputePass, Mesh, PlaneGeometry, Vec2, Vec3 } from 'gpu-curtains'
 import { particlesDepthPassShaders, shadowedParticlesFs, shadowedParticlesVs } from '../shaders/shadowed-particles.wgsl'
 import { computeParticles } from '../shaders/compute-particles.wgsl'
 import { ShadowMap } from './ShadowMap'
+import { wrappingBoxFs, wrappingBoxVs } from '../shaders/shadowed-wrapping-box.wgsl'
 
 export class ShadowedParticlesScene extends DemoScene {
   constructor({ renderer, nbInstances = 100_000 }) {
@@ -80,6 +81,7 @@ export class ShadowedParticlesScene extends DemoScene {
 
     this.createComputePasses()
     this.createParticles()
+    this.createWrappingBox()
   }
 
   destroyWebGPU() {
@@ -90,6 +92,7 @@ export class ShadowedParticlesScene extends DemoScene {
     this.computeBindGroup?.destroy()
 
     this.particlesSystem?.remove()
+    this.wrappingBox?.remove()
   }
 
   async createComputePasses() {
@@ -269,6 +272,76 @@ export class ShadowedParticlesScene extends DemoScene {
       },
       bindings: [particlesParamsBindings],
     })
+  }
+
+  createWrappingBox() {
+    this.wrappingBox = new Mesh(
+      this.renderer,
+      this.shadowMap.patchShadowReceivingParameters({
+        label: 'Shadowed wrapping box',
+        geometry: new BoxGeometry(),
+        frustumCulling: false,
+        cullMode: 'front',
+        shaders: {
+          vertex: {
+            code: wrappingBoxVs,
+          },
+          fragment: {
+            code: wrappingBoxFs,
+          },
+        },
+        uniforms: {
+          shading: {
+            struct: {
+              color: {
+                type: 'vec3f',
+                value: new Vec3(0.3),
+              },
+              shadowIntensity: {
+                type: 'f32',
+                value: 0.5,
+              },
+            },
+          },
+          ambientLight: {
+            struct: {
+              color: {
+                type: 'vec3f',
+                value: new Vec3(1),
+              },
+              intensity: {
+                type: 'f32',
+                value: 0.35,
+              },
+            },
+          },
+          directionalLight: {
+            struct: {
+              intensity: {
+                type: 'f32',
+                value: 1.25,
+              },
+              color: {
+                type: 'vec3f',
+                value: new Vec3(1),
+              },
+            },
+          },
+        },
+      })
+    )
+
+    const setWrappingBoxScale = () => {
+      this.wrappingBox.scale.x = this.visibleSize.width * 0.5
+      this.wrappingBox.scale.y = this.visibleSize.height * 0.5
+    }
+
+    this.wrappingBox.scale.z = this.radius * 1.5
+    this.wrappingBox.position.z = -this.wrappingBox.scale.z
+
+    setWrappingBoxScale()
+
+    this.wrappingBox.onAfterResize(setWrappingBoxScale)
   }
 
   addEvents() {
