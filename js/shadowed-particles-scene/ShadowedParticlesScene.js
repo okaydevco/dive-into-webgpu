@@ -1,7 +1,7 @@
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
-import { BindGroup, BufferBinding, ComputePass, Mesh, PlaneGeometry } from 'gpu-curtains'
-import { shadowedParticlesVs } from '../shaders/shadowed-particles.wgsl'
+import { BindGroup, BufferBinding, ComputePass, Mesh, PlaneGeometry, Vec3 } from 'gpu-curtains'
+import { shadowedParticlesFs, shadowedParticlesVs } from '../shaders/shadowed-particles.wgsl'
 import { computeParticles } from '../shaders/compute-particles.wgsl'
 
 export class ShadowedParticlesScene extends DemoScene {
@@ -16,7 +16,8 @@ export class ShadowedParticlesScene extends DemoScene {
     // particle system radius
     this.radius = 50
 
-    this.renderer.camera.position.z = 375
+    // just so we can better visualize the shape of the particles
+    this.renderer.camera.position.z = 150
 
     super.init()
   }
@@ -175,6 +176,31 @@ export class ShadowedParticlesScene extends DemoScene {
       shaders: {
         vertex: {
           code: shadowedParticlesVs,
+        },
+        fragment: {
+          code: shadowedParticlesFs,
+        },
+      },
+      uniforms: {
+        shading: {
+          struct: {
+            lightColor: {
+              type: 'vec3f',
+              value: new Vec3(255 / 255, 240 / 255, 97 / 255),
+            },
+            darkColor: {
+              type: 'vec3f',
+              value: new Vec3(184 / 255, 162 / 255, 9 / 255),
+            },
+          },
+        },
+        params: {
+          struct: {
+            size: {
+              type: 'f32',
+              value: 0.7,
+            },
+          },
         },
       },
     })
