@@ -1,7 +1,7 @@
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
 import { BindGroup, BufferBinding, ComputePass, Mesh, PlaneGeometry, Vec2, Vec3 } from 'gpu-curtains'
-import { shadowedParticlesFs, shadowedParticlesVs } from '../shaders/shadowed-particles.wgsl'
+import { particlesDepthPassShaders, shadowedParticlesFs, shadowedParticlesVs } from '../shaders/shadowed-particles.wgsl'
 import { computeParticles } from '../shaders/compute-particles.wgsl'
 import { ShadowMap } from './ShadowMap'
 
@@ -205,40 +205,69 @@ export class ShadowedParticlesScene extends DemoScene {
       ],
     })
 
-    this.particlesSystem = new Mesh(this.renderer, {
-      label: 'Shadowed particles system',
-      geometry,
-      frustumCulling: false,
+    // since we need this uniform in both the depth pass and regular pass
+    // create a new buffer binding that will be shared by both materials
+    const particlesParamsBindings = new BufferBinding({
+      label: 'Params',
+      name: 'params',
+      bindingType: 'uniform',
+      visibility: ['vertex'],
+      struct: {
+        size: {
+          type: 'f32',
+          value: 0.7,
+        },
+      },
+    })
+
+    this.particlesSystem = new Mesh(
+      this.renderer,
+      this.shadowMap.patchShadowReceivingParameters({
+        label: 'Shadowed particles system',
+        geometry,
+        frustumCulling: false,
+        shaders: {
+          vertex: {
+            code: shadowedParticlesVs,
+          },
+          fragment: {
+            code: shadowedParticlesFs,
+          },
+        },
+        uniforms: {
+          shading: {
+            struct: {
+              lightColor: {
+                type: 'vec3f',
+                value: new Vec3(255 / 255, 240 / 255, 97 / 255),
+              },
+              darkColor: {
+                type: 'vec3f',
+                value: new Vec3(184 / 255, 162 / 255, 9 / 255),
+              },
+              shadowIntensity: {
+                type: 'f32',
+                value: 0.75,
+              },
+            },
+          },
+        },
+        bindings: [particlesParamsBindings],
+      })
+    )
+
+    this.shadowMap.addShadowCastingMesh(this.particlesSystem, {
       shaders: {
         vertex: {
-          code: shadowedParticlesVs,
+          code: particlesDepthPassShaders,
+          entryPoint: 'shadowMapVertex',
         },
         fragment: {
-          code: shadowedParticlesFs,
+          code: particlesDepthPassShaders,
+          entryPoint: 'shadowMapFragment',
         },
       },
-      uniforms: {
-        shading: {
-          struct: {
-            lightColor: {
-              type: 'vec3f',
-              value: new Vec3(255 / 255, 240 / 255, 97 / 255),
-            },
-            darkColor: {
-              type: 'vec3f',
-              value: new Vec3(184 / 255, 162 / 255, 9 / 255),
-            },
-          },
-        },
-        params: {
-          struct: {
-            size: {
-              type: 'f32',
-              value: 0.7,
-            },
-          },
-        },
-      },
+      bindings: [particlesParamsBindings],
     })
   }
 
