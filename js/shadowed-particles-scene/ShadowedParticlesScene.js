@@ -1,7 +1,8 @@
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
-import { Mesh, Object3D, PlaneGeometry } from 'gpu-curtains'
+import { BindGroup, BufferBinding, ComputePass, Mesh, Object3D, PlaneGeometry } from 'gpu-curtains'
 import { shadowedParticlesVs } from '../shaders/shadowed-particles.wgsl'
+import { computeParticles } from '../shaders/compute-particles.wgsl'
 
 export class ShadowedParticlesScene extends DemoScene {
   constructor({ renderer, nbInstances = 100_000 }) {
@@ -46,6 +47,7 @@ export class ShadowedParticlesScene extends DemoScene {
   }
 
   setupWebGPU() {
+    this.createComputePasses()
     this.createParticles()
   }
 
@@ -53,9 +55,98 @@ export class ShadowedParticlesScene extends DemoScene {
     this.particlesSystem?.remove()
   }
 
+  async createComputePasses() {
+    this.initComputeBuffer = new BufferBinding({
+      label: 'Compute particles init buffer',
+      name: 'initParticles',
+      bindingType: 'storage',
+      access: 'read_write', // we want a readable AND writable buffer!
+      usage: ['vertex'], // we're going to use this buffer as a vertex buffer along default usages
+      visibility: ['compute'],
+      struct: {
+        position: {
+          type: 'array<vec4f>',
+          value: new Float32Array(this.nbInstances * 4),
+        },
+        velocity: {
+          type: 'array<vec4f>',
+          value: new Float32Array(this.nbInstances * 4),
+        },
+      },
+    })
+
+    // update buffer, cloned from init one
+    this.updateComputeBuffer = this.initComputeBuffer.clone({
+      ...this.initComputeBuffer.options,
+      label: 'Compute particles update buffer',
+      name: 'particles',
+    })
+
+    this.computeBindGroup = new BindGroup(this.renderer, {
+      label: 'Compute particles bind group',
+      bindings: [this.initComputeBuffer, this.updateComputeBuffer],
+      uniforms: {
+        params: {
+          visibility: ['compute'],
+          struct: {
+            radius: {
+              type: 'f32',
+              value: this.radius * 10, // * 10 for temporary debugging purpose
+            },
+            maxLife: {
+              type: 'f32',
+              value: 60, // in frames
+            },
+          },
+        },
+      },
+    })
+
+    const computeInitDataPass = new ComputePass(this.renderer, {
+      label: 'Compute initial data',
+      shaders: {
+        compute: {
+          code: computeParticles,
+          entryPoint: 'setInitData',
+        },
+      },
+      dispatchSize: Math.ceil(this.nbInstances / 256),
+      bindGroups: [this.computeBindGroup],
+      autoRender: false, // we don't want to run this pass each frame
+    })
+
+    // we should wait for pipeline compilation!
+    await computeInitDataPass.material.compileMaterial()
+
+    // now run the compute pass just once
+    this.renderer.renderOnce([computeInitDataPass])
+  }
+
   createParticles() {
     const geometry = new PlaneGeometry({
       instancesCount: this.nbInstances,
+      vertexBuffers: [
+        {
+          // use instancing
+          stepMode: 'instance',
+          name: 'instanceAttributes',
+          buffer: this.updateComputeBuffer.buffer, // pass the compute buffer right away
+          attributes: [
+            {
+              name: 'particlePosition',
+              type: 'vec4f',
+              bufferFormat: 'float32x4',
+              size: 4,
+            },
+            {
+              name: 'particleVelocity',
+              type: 'vec4f',
+              bufferFormat: 'float32x4',
+              size: 4,
+            },
+          ],
+        },
+      ],
     })
 
     this.particlesSystem = new Mesh(this.renderer, {
@@ -65,16 +156,6 @@ export class ShadowedParticlesScene extends DemoScene {
       shaders: {
         vertex: {
           code: shadowedParticlesVs,
-        },
-      },
-      uniforms: {
-        params: {
-          struct: {
-            radius: {
-              type: 'f32',
-              value: this.radius * 10, // space them a bit
-            },
-          },
         },
       },
     })
