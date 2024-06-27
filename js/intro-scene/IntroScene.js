@@ -176,8 +176,6 @@ export class IntroScene extends DemoScene {
   }
 
   onRender() {
-    if (!this.shouldRender) return
-
     this.meshes.forEach((mesh) => {
       mesh.userData.currentPosition
         .copy(mesh.userData.endPosition)
