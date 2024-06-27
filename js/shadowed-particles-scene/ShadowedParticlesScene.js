@@ -168,8 +168,6 @@ export class ShadowedParticlesScene extends DemoScene {
   }
 
   onRender() {
-    if (!this.shouldRender) return
-
     if (this.cameraPivot) {
       this.cameraPivot.rotation.y += 0.01
     }
