@@ -245,8 +245,6 @@ export class IntroScene extends DemoScene {
   }
 
   onRender() {
-    if (!this.shouldRender) return
-
     // lerp light position for a more pleasant result
     this.lightPosition.lerp(this.currentLightPosition, 0.05)
 

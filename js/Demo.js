@@ -58,7 +58,7 @@ export class Demo {
     this.scenes.forEach((scene) => scene.initWebGPU())
 
     this.gpuCurtains.onRender(() => {
-      this.scenes.forEach((scene) => scene.onRender())
+      this.scenes.forEach((scene) => scene.shouldRender && scene.onRender())
     })
   }
 
