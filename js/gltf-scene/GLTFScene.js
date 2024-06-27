@@ -98,7 +98,7 @@ export class GLTFScene extends DemoScene {
 
   async loadGLTF() {
     this.gltfLoader = new GLTFLoader()
-    this.gltf = await this.gltfLoader.loadFromUrl('/assets/gltf/metal_credit_card.glb')
+    this.gltf = await this.gltfLoader.loadFromUrl('./assets/gltf/metal_credit_card.glb')
 
     this.gltfScenesManager = new GLTFScenesManager({
       renderer: this.renderer,
