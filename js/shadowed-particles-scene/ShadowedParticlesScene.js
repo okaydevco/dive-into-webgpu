@@ -258,8 +258,6 @@ export class ShadowedParticlesScene extends DemoScene {
   }
 
   onRender() {
-    if (!this.shouldRender) return
-
     this.mouse.lerped.lerp(this.mouse.current, 0.5)
   }
 }
