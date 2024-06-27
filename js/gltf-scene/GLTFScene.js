@@ -383,8 +383,6 @@ export class GLTFScene extends DemoScene {
   }
 
   onRender() {
-    if (!this.shouldRender) return
-
     this.mouse.lerpedInteraction.lerp(this.mouse.currentInteraction, 0.2)
 
     this.parentNode.rotation.x = this.mouse.lerpedInteraction.y
