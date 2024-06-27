@@ -517,10 +517,10 @@ globals@^13.19.0:
   dependencies:
     type-fest "^0.20.2"
 
-gpu-curtains@^0.7.5:
-  version "0.7.5"
-  resolved "https://registry.yarnpkg.com/gpu-curtains/-/gpu-curtains-0.7.5.tgz#827b1e1e1eee29697b3e58c7a8ad6a03d9dc3119"
-  integrity sha512-yiXcQnkhQveEWW0/3W7DsdLujghw9AW/JcypotGGolw/jXZsGkM2HaVhGgXPSdYhPH6xNQpo4isCcpHst4NVkA==
+gpu-curtains@^0.7.7:
+  version "0.7.7"
+  resolved "https://registry.yarnpkg.com/gpu-curtains/-/gpu-curtains-0.7.7.tgz#6ef11d6df59cb239a077e078f341e4149740e212"
+  integrity sha512-zV13muKx3eOp2zQx2dTBxwhGWd1xQ2uwu4eCSLyvc+KLWfZlFqfrfGwaVWgXscyNJV8zBAx/Hjdb8/1yNeqbwA==
 
 graphemer@^1.4.0:
   version "1.4.0"
