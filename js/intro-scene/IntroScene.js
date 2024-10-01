@@ -1,4 +1,4 @@
-import { BoxGeometry, Mesh, SphereGeometry, Vec2, Vec3 } from 'gpu-curtains'
+import { AmbientLight, DirectionalLight, BoxGeometry, Mesh, SphereGeometry, Vec2, Vec3 } from 'gpu-curtains'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
 import { gsap } from 'gsap'
@@ -17,11 +17,17 @@ export class IntroScene extends DemoScene {
     // default camera position is (0, 0, 10)
     this.renderer.camera.position.z = 80
 
-    // feel free to tweak the light position and see how it goes
-    // this.lightPosition = new Vec3(50, 20, 100)
+    this.ambientLight = new AmbientLight(this.renderer, {
+      intensity: 0.05,
+    })
 
-    this.lightPosition = this.renderer.camera.position.clone().multiplyScalar(2)
-    this.currentLightPosition = this.lightPosition.clone()
+    this.directionalLight = new DirectionalLight(this.renderer, {
+      // feel free to tweak the light position and see how it goes
+      position: this.renderer.camera.position.clone().multiplyScalar(2),
+      intensity: 1,
+    })
+
+    this.currentLightPosition = this.directionalLight.position.clone()
 
     this.meshes = []
 
@@ -34,6 +40,8 @@ export class IntroScene extends DemoScene {
 
   destroyWebGPU() {
     this.meshes.forEach((mesh) => mesh.remove())
+    this.ambientLight.destroy()
+    this.directionalLight.destroy()
   }
 
   addEvents() {
@@ -77,7 +85,6 @@ export class IntroScene extends DemoScene {
   addEnteringAnimation() {
     this.animations = {
       meshesPositionProgress: 0,
-      lightIntensity: 1,
     }
 
     this.autoAlphaElements = this.section.querySelectorAll('.gsap-auto-alpha')
@@ -93,18 +100,13 @@ export class IntroScene extends DemoScene {
         duration: 2,
       })
       .fromTo(
-        this.animations,
+        this.directionalLight,
         {
-          lightIntensity: 1,
+          intensity: 1,
         },
         {
-          lightIntensity: 0.6,
+          intensity: 0.6,
           duration: 0.5,
-          onUpdate: () => {
-            this.meshes.forEach((mesh) => {
-              mesh.uniforms.directionalLight.intensity.value = this.animations.lightIntensity
-            })
-          },
         },
         1
       )
@@ -152,36 +154,6 @@ export class IntroScene extends DemoScene {
           },
         },
         uniforms: {
-          ambientLight: {
-            visibility: ['fragment'],
-            struct: {
-              color: {
-                type: 'vec3f',
-                value: new Vec3(1),
-              },
-              intensity: {
-                type: 'f32',
-                value: 0.05,
-              },
-            },
-          },
-          directionalLight: {
-            visibility: ['fragment'],
-            struct: {
-              position: {
-                type: 'vec3f',
-                value: this.lightPosition,
-              },
-              intensity: {
-                type: 'f32',
-                value: 1,
-              },
-              color: {
-                type: 'vec3f',
-                value: new Vec3(1),
-              },
-            },
-          },
           shading: {
             visibility: ['fragment'],
             struct: {
@@ -246,7 +218,7 @@ export class IntroScene extends DemoScene {
 
   onRender() {
     // lerp light position for a more pleasant result
-    this.lightPosition.lerp(this.currentLightPosition, 0.05)
+    this.directionalLight.position.lerp(this.currentLightPosition, 0.05)
 
     this.meshes.forEach((mesh) => {
       mesh.userData.currentPosition

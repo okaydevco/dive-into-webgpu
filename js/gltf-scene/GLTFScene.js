@@ -1,12 +1,17 @@
-import { buildPBRShaders, DOMObject3D, GLTFLoader, GLTFScenesManager, Sampler, Vec2, Vec3 } from 'gpu-curtains'
+import {
+  AmbientLight,
+  PointLight,
+  buildShaders,
+  DOMObject3D,
+  GLTFLoader,
+  GLTFScenesManager,
+  Sampler,
+  Vec2,
+  Vec3,
+} from 'gpu-curtains'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
-import {
-  additionalFragmentHead,
-  ambientContribution,
-  lightContribution,
-  preliminaryColorContribution,
-} from '../shaders/chunks/gltf-contributions.wgsl'
+import { additionalFragmentHead, preliminaryColorContribution } from '../shaders/chunks/gltf-contributions.wgsl'
 import { gsap } from 'gsap'
 
 export class GLTFScene extends DemoScene {
@@ -17,6 +22,15 @@ export class GLTFScene extends DemoScene {
   init() {
     this.section = document.querySelector('#gltf-scene')
     this.gltfElement = document.querySelector('#gltf-scene-object')
+
+    this.ambientLight = new AmbientLight(this.renderer, {
+      intensity: 0.35,
+    })
+
+    this.pointLight = new PointLight(this.renderer, {
+      intensity: 1, // will be updated later
+      range: 1, // will be updated later
+    })
 
     this.parentNode = new DOMObject3D(this.renderer, this.gltfElement, {
       watchScroll: false, // no need to watch the scroll
@@ -36,6 +50,8 @@ export class GLTFScene extends DemoScene {
 
   destroyWebGPU() {
     this.gltfScenesManager?.destroy()
+    this.ambientLight.destroy()
+    this.pointLight.destroy()
     this.removeButtonInteractions()
   }
 
@@ -232,7 +248,11 @@ export class GLTFScene extends DemoScene {
 
       // add lights
       const lightPosition = new Vec3(-radius * 1.25, radius * 0.5, radius * 1.5)
-      const lightPositionLength = lightPosition.length()
+
+      this.pointLight.position.set(-radius * 1.25, radius * 0.5, radius * 1.5)
+      const lightPositionLength = this.pointLight.position.length()
+      this.pointLight.intensity = lightPositionLength * 0.75
+      this.pointLight.range = lightPositionLength * 2.5
 
       // put all base color factors into a single array
       const baseColorFactorsArray = this.cards
@@ -264,47 +284,14 @@ export class GLTFScene extends DemoScene {
               },
             },
           },
-          ambientLight: {
-            struct: {
-              intensity: {
-                type: 'f32',
-                value: 0.35,
-              },
-              color: {
-                type: 'vec3f',
-                value: new Vec3(1),
-              },
-            },
-          },
-          pointLight: {
-            struct: {
-              position: {
-                type: 'vec3f',
-                value: lightPosition,
-              },
-              intensity: {
-                type: 'f32',
-                value: lightPositionLength * 0.75,
-              },
-              color: {
-                type: 'vec3f',
-                value: new Vec3(1),
-              },
-              range: {
-                type: 'f32',
-                value: lightPositionLength * 2.5,
-              },
-            },
-          },
         },
       }
 
-      parameters.shaders = buildPBRShaders(meshDescriptor, {
+      parameters.shaders = buildShaders(meshDescriptor, {
+        shadingModel: 'PBR',
         chunks: {
           additionalFragmentHead,
           preliminaryColorContribution,
-          ambientContribution,
-          lightContribution,
         },
       })
     })

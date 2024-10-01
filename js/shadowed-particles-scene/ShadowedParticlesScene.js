@@ -1,10 +1,20 @@
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { DemoScene } from '../DemoScene'
-import { BindGroup, BoxGeometry, BufferBinding, ComputePass, Mesh, PlaneGeometry, Vec2, Vec3 } from 'gpu-curtains'
+import {
+  BindGroup,
+  AmbientLight,
+  DirectionalLight,
+  BoxGeometry,
+  BufferBinding,
+  ComputePass,
+  Mesh,
+  PlaneGeometry,
+  Vec2,
+  Vec3,
+} from 'gpu-curtains'
 import { particlesDepthPassShaders, shadowedParticlesFs, shadowedParticlesVs } from '../shaders/shadowed-particles.wgsl'
 import { computeParticles } from '../shaders/compute-particles.wgsl'
-import { ShadowMap } from './ShadowMap'
-import { wrappingBoxFs, wrappingBoxVs } from '../shaders/shadowed-wrapping-box.wgsl'
+import { wrappingBoxFs } from '../shaders/shadowed-wrapping-box.wgsl'
 import { gsap } from 'gsap'
 
 export class ShadowedParticlesScene extends DemoScene {
@@ -20,6 +30,15 @@ export class ShadowedParticlesScene extends DemoScene {
     this.radius = 50
 
     this.renderer.camera.position.z = 375
+    this.particleSize = 0.7
+
+    this.ambientLight = new AmbientLight(this.renderer, {
+      intensity: 0.35,
+    })
+
+    this.directionalLight = new DirectionalLight(this.renderer, {
+      intensity: 1.25,
+    })
 
     this.setSizeDependentValues()
     this.renderer.onResize(this.setSizeDependentValues.bind(this))
@@ -89,7 +108,7 @@ export class ShadowedParticlesScene extends DemoScene {
       .to(
         this.animation,
         {
-          progress: 0.7, // final particle size
+          progress: this.particleSize, // final particle size
           duration: 1,
           ease: 'expo.in',
         },
@@ -104,22 +123,18 @@ export class ShadowedParticlesScene extends DemoScene {
   setupWebGPU() {
     const distance = this.renderer.camera.position.z
 
-    this.shadowMap = new ShadowMap({
-      renderer: this.renderer,
-      depthTextureSize: 1024,
-      light: {
-        position: new Vec3(distance * 0.5, distance * 0.325, distance * 0.5),
-        // add a bit of spacing on every side
-        // to avoid out of view particles to be culled
-        // by the shadow map orthographic matrix
-        orthographicCamera: {
-          left: distance * -1.05,
-          right: distance * 1.05,
-          top: distance * 1.05,
-          bottom: distance * -1.05,
-          near: 0.1,
-          far: distance * 5,
-        },
+    this.directionalLight.position.set(distance, distance * 0.5, distance)
+    this.directionalLight.shadow.cast({
+      depthTextureSize: new Vec2(1024),
+      intensity: 0.75,
+      pcfSamples: 3,
+      camera: {
+        left: distance * -1.05,
+        right: distance * 1.05,
+        top: distance * 1.05,
+        bottom: distance * -1.05,
+        near: 0.1,
+        far: distance * 5,
       },
     })
 
@@ -129,7 +144,8 @@ export class ShadowedParticlesScene extends DemoScene {
   }
 
   destroyWebGPU() {
-    this.shadowMap.destroy()
+    this.ambientLight.destroy()
+    this.directionalLight.destroy()
 
     // destroy both compute pass and compute bind group
     this.computePass?.destroy()
@@ -262,48 +278,44 @@ export class ShadowedParticlesScene extends DemoScene {
       struct: {
         size: {
           type: 'f32',
-          value: 0.7,
+          value: this.particleSize,
         },
       },
     })
 
-    this.particlesSystem = new Mesh(
-      this.renderer,
-      this.shadowMap.patchShadowReceivingParameters({
-        label: 'Shadowed particles system',
-        geometry,
-        frustumCulling: false,
-        shaders: {
-          vertex: {
-            code: shadowedParticlesVs,
-          },
-          fragment: {
-            code: shadowedParticlesFs,
-          },
+    this.particlesSystem = new Mesh(this.renderer, {
+      label: 'Shadowed particles system',
+      geometry,
+      frustumCulling: false,
+      receiveShadows: true,
+      shaders: {
+        vertex: {
+          code: shadowedParticlesVs,
         },
-        uniforms: {
-          shading: {
-            struct: {
-              lightColor: {
-                type: 'vec3f',
-                value: new Vec3(255 / 255, 240 / 255, 97 / 255),
-              },
-              darkColor: {
-                type: 'vec3f',
-                value: new Vec3(184 / 255, 162 / 255, 9 / 255),
-              },
-              shadowIntensity: {
-                type: 'f32',
-                value: 0.75,
-              },
+        fragment: {
+          code: shadowedParticlesFs,
+        },
+      },
+      uniforms: {
+        shading: {
+          struct: {
+            lightColor: {
+              type: 'vec3f',
+              value: new Vec3(255 / 255, 240 / 255, 97 / 255),
+            },
+            darkColor: {
+              type: 'vec3f',
+              value: new Vec3(184 / 255, 162 / 255, 9 / 255),
             },
           },
         },
-        bindings: [particlesParamsBindings],
-      })
-    )
+      },
+      bindings: [particlesParamsBindings],
+    })
 
-    this.shadowMap.addShadowCastingMesh(this.particlesSystem, {
+    // add the particles to shadow map with additional parameters
+    this.directionalLight.shadow.addShadowCastingMesh(this.particlesSystem, {
+      bindings: [particlesParamsBindings],
       shaders: {
         vertex: {
           code: particlesDepthPassShaders,
@@ -314,66 +326,32 @@ export class ShadowedParticlesScene extends DemoScene {
           entryPoint: 'shadowMapFragment',
         },
       },
-      bindings: [particlesParamsBindings],
     })
   }
 
   createWrappingBox() {
-    this.wrappingBox = new Mesh(
-      this.renderer,
-      this.shadowMap.patchShadowReceivingParameters({
-        label: 'Shadowed wrapping box',
-        geometry: new BoxGeometry(),
-        frustumCulling: false,
-        cullMode: 'front',
-        shaders: {
-          vertex: {
-            code: wrappingBoxVs,
-          },
-          fragment: {
-            code: wrappingBoxFs,
-          },
+    this.wrappingBox = new Mesh(this.renderer, {
+      label: 'Shadowed wrapping box',
+      geometry: new BoxGeometry(),
+      frustumCulling: false,
+      cullMode: 'front',
+      receiveShadows: true,
+      shaders: {
+        fragment: {
+          code: wrappingBoxFs,
         },
-        uniforms: {
-          shading: {
-            struct: {
-              color: {
-                type: 'vec3f',
-                value: new Vec3(0.3),
-              },
-              shadowIntensity: {
-                type: 'f32',
-                value: 0.5,
-              },
-            },
-          },
-          ambientLight: {
-            struct: {
-              color: {
-                type: 'vec3f',
-                value: new Vec3(1),
-              },
-              intensity: {
-                type: 'f32',
-                value: 0.35,
-              },
-            },
-          },
-          directionalLight: {
-            struct: {
-              intensity: {
-                type: 'f32',
-                value: 1.25,
-              },
-              color: {
-                type: 'vec3f',
-                value: new Vec3(1),
-              },
+      },
+      uniforms: {
+        shading: {
+          struct: {
+            color: {
+              type: 'vec3f',
+              value: new Vec3(0.5),
             },
           },
         },
-      })
-    )
+      },
+    })
 
     const setWrappingBoxScale = () => {
       this.wrappingBox.scale.x = this.visibleSize.width * 0.5
