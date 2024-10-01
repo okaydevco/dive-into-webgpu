@@ -66,12 +66,12 @@ export class PlanesScene extends DemoScene {
             value: 1,
             duration: 1.5,
             ease: 'expo.out',
+            onStart: () => {
+              nbAnimatedPlanes--
+            },
             onUpdate: () => {
               const textureScale = 1.5 - plane.uniforms.params.opacity.value * 0.5
               plane.domTextures[0]?.scale.set(textureScale, textureScale, 1)
-            },
-            onComplete: () => {
-              nbAnimatedPlanes--
             },
           }
         )
