@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "gpu-curtains": "^0.8.1",
+    "gpu-curtains": "~0.8.2",
     "gsap": "^3.12.5",
     "lenis": "1.1.3",
     "vite": "4.5.3"
