@@ -32,6 +32,10 @@
     font-family: var(--text-font);
   }
 
+  .no-webgpu .gsap-auto-alpha {
+    visibility: visible;
+  }
+
   .container {
     padding: var(--basic-spacing);
   }
@@ -151,14 +155,14 @@
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center center;
-    opacity: 0;
-    transition: opacity 0.25s;
+    /* opacity: 0;
+    transition: opacity 0.25s; */
   }
 
-  .no-webgpu #intro-scene.is-visible:after {
+  /* .no-webgpu #intro-scene.is-visible:after {
     opacity: 1;
     transition: opacity 1s 0.5s;
-  }
+  } */
 
   #intro-scene-canvas {
     position: absolute;
@@ -279,14 +283,14 @@
 
   .no-webgpu #planes-grid .plane img {
     visibility: visible;
-    opacity: 0;
-    transition: opacity 0.25s;
+    /* opacity: 0;
+    transition: opacity 0.25s; */
   }
 
-  .no-webgpu #planes-scene.is-visible #planes-grid .plane img {
+  /* .no-webgpu #planes-scene.is-visible #planes-grid .plane img {
     opacity: 1;
     transition: opacity 0.5s 0.5s;
-  }
+  } */
 
   /* GLTF SCENE */
 
@@ -358,14 +362,14 @@
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center center;
-    opacity: 0;
-    transition: opacity 0.25s;
+    /* opacity: 0;
+    transition: opacity 0.25s; */
   }
 
-  .no-webgpu #gltf-scene.is-visible #gltf-scene-object {
+  /* .no-webgpu #gltf-scene.is-visible #gltf-scene-object {
     opacity: 1;
     transition: opacity 1s;
-  }
+  } */
 
   #gltf-scene-controls {
     grid-column: 2 / -3;
@@ -431,14 +435,14 @@
     background-repeat: no-repeat;
     background-size: cover;
     background-position: center center;
-    opacity: 0;
-    transition: opacity 0.25s;
+    /* opacity: 0;
+    transition: opacity 0.25s; */
   }
 
-  .no-webgpu #shadowed-particles-scene.is-visible:after {
+  /* .no-webgpu #shadowed-particles-scene.is-visible:after {
     opacity: 1;
     transition: opacity 1s;
-  }
+  } */
 
   #shadowed-particles-scene-canvas {
     position: absolute;
