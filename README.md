@@ -1,6 +1,6 @@
 # Dive into WebGPU with gpu-curtains
 
-![Dive into WebGPU image](https://images.okaydev.co/production/images/articles/dive-into-webgpu/dive-into-webgpu.png?w=1920&h=1080&auto=compress%2Cformat&fit=min&dm=1727902186&s=c3a59e1f153ff4671977e45e72d40d65)
+![Dive into WebGPU image](https://images.okaydev.co/production/images/articles/dive-into-webgpu/part-1/dive-into-webgpu.png?w=1200&h=630&q=82&auto=format&fit=min&dm=1734234711&s=371253a9f9c3c96e549c7eab34b9a063)
 
 ### About the Tutorial
 
